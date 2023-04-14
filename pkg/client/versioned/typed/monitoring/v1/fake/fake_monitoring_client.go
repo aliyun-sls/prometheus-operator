@@ -46,6 +46,14 @@ func (c *FakeMonitoringV1) PrometheusRules(namespace string) v1.PrometheusRuleIn
 	return &FakePrometheusRules{c, namespace}
 }
 
+func (c *FakeMonitoringV1) SLSPodMonitors(namespace string) v1.SLSPodMonitorInterface {
+	return &FakeSLSPodMonitors{c, namespace}
+}
+
+func (c *FakeMonitoringV1) SLSServiceMonitors(namespace string) v1.SLSServiceMonitorInterface {
+	return &FakeSLSServiceMonitors{c, namespace}
+}
+
 func (c *FakeMonitoringV1) ServiceMonitors(namespace string) v1.ServiceMonitorInterface {
 	return &FakeServiceMonitors{c, namespace}
 }

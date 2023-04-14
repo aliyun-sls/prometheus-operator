@@ -28,12 +28,14 @@ const (
 )
 
 var resourceToKind = map[string]string{
-	PrometheusName:     PrometheusesKind,
-	AlertmanagerName:   AlertmanagersKind,
-	ServiceMonitorName: ServiceMonitorsKind,
-	PodMonitorName:     PodMonitorsKind,
-	PrometheusRuleName: PrometheusRuleKind,
-	ProbeName:          ProbesKind,
+	PrometheusName:        PrometheusesKind,
+	AlertmanagerName:      AlertmanagersKind,
+	ServiceMonitorName:    ServiceMonitorsKind,
+	PodMonitorName:        PodMonitorsKind,
+	PrometheusRuleName:    PrometheusRuleKind,
+	ProbeName:             ProbesKind,
+	SLSPodMonitorName:     SLSPodMonitorsKind,
+	SLSServiceMonitorName: SLSServiceMonitorsKind,
 }
 
 // ByteSize is a valid memory size type based on powers-of-2, so 1KB is 1024B.

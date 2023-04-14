@@ -56,6 +56,22 @@ type PrometheusRuleListerExpansion interface{}
 // PrometheusRuleNamespaceLister.
 type PrometheusRuleNamespaceListerExpansion interface{}
 
+// SLSPodMonitorListerExpansion allows custom methods to be added to
+// SLSPodMonitorLister.
+type SLSPodMonitorListerExpansion interface{}
+
+// SLSPodMonitorNamespaceListerExpansion allows custom methods to be added to
+// SLSPodMonitorNamespaceLister.
+type SLSPodMonitorNamespaceListerExpansion interface{}
+
+// SLSServiceMonitorListerExpansion allows custom methods to be added to
+// SLSServiceMonitorLister.
+type SLSServiceMonitorListerExpansion interface{}
+
+// SLSServiceMonitorNamespaceListerExpansion allows custom methods to be added to
+// SLSServiceMonitorNamespaceLister.
+type SLSServiceMonitorNamespaceListerExpansion interface{}
+
 // ServiceMonitorListerExpansion allows custom methods to be added to
 // ServiceMonitorLister.
 type ServiceMonitorListerExpansion interface{}

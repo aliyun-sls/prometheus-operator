@@ -61,6 +61,10 @@ func addKnownTypes(scheme *runtime.Scheme) error {
 		&PrometheusRuleList{},
 		&ThanosRuler{},
 		&ThanosRulerList{},
+		&SLSServiceMonitor{},
+		&SLSPodMonitorList{},
+		&SLSPodMonitor{},
+		&SLSPodMonitorList{},
 	)
 	metav1.AddToGroupVersion(scheme, SchemeGroupVersion)
 	return nil

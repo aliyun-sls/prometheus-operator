@@ -32,13 +32,10 @@ import (
 
 	logging "github.com/prometheus-operator/prometheus-operator/internal/log"
 	"github.com/prometheus-operator/prometheus-operator/pkg/admission"
-	alertmanagercontroller "github.com/prometheus-operator/prometheus-operator/pkg/alertmanager"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
-	prometheusagentcontroller "github.com/prometheus-operator/prometheus-operator/pkg/prometheus/agent"
-	prometheuscontroller "github.com/prometheus-operator/prometheus-operator/pkg/prometheus/server"
 	"github.com/prometheus-operator/prometheus-operator/pkg/server"
-	thanoscontroller "github.com/prometheus-operator/prometheus-operator/pkg/thanos"
+	sls "github.com/prometheus-operator/prometheus-operator/pkg/sls"
 	"github.com/prometheus-operator/prometheus-operator/pkg/versionutil"
 
 	rbacproxytls "github.com/brancz/kube-rbac-proxy/pkg/tls"
@@ -258,30 +255,9 @@ func Main() int {
 
 	k8sutil.MustRegisterClientGoMetrics(r)
 
-	po, err := prometheuscontroller.New(ctx, cfg, log.With(logger, "component", "prometheusoperator"), r)
-	if err != nil {
-		fmt.Fprint(os.Stderr, "instantiating prometheus controller failed: ", err)
-		cancel()
-		return 1
-	}
-
-	pao, err := prometheusagentcontroller.New(ctx, cfg, log.With(logger, "component", "prometheusagentoperator"), r)
+	pao, err := sls.New(ctx, cfg, log.With(logger, "component", "prometheusagentoperator"), r)
 	if err != nil {
 		fmt.Fprint(os.Stderr, "instantiating prometheus-agent controller failed: ", err)
-		cancel()
-		return 1
-	}
-
-	ao, err := alertmanagercontroller.New(ctx, cfg, log.With(logger, "component", "alertmanageroperator"), r)
-	if err != nil {
-		fmt.Fprint(os.Stderr, "instantiating alertmanager controller failed: ", err)
-		cancel()
-		return 1
-	}
-
-	to, err := thanoscontroller.New(ctx, cfg, log.With(logger, "component", "thanosoperator"), r)
-	if err != nil {
-		fmt.Fprint(os.Stderr, "instantiating thanos controller failed: ", err)
 		cancel()
 		return 1
 	}
@@ -358,10 +334,7 @@ func Main() int {
 		w.WriteHeader(http.StatusOK)
 	}))
 
-	wg.Go(func() error { return po.Run(ctx) })
 	wg.Go(func() error { return pao.Run(ctx) })
-	wg.Go(func() error { return ao.Run(ctx) })
-	wg.Go(func() error { return to.Run(ctx) })
 
 	if tlsConfig != nil {
 		r, err := rbacproxytls.NewCertReloader(

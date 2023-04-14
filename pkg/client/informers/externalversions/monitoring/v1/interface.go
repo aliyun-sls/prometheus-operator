@@ -32,6 +32,10 @@ type Interface interface {
 	Prometheuses() PrometheusInformer
 	// PrometheusRules returns a PrometheusRuleInformer.
 	PrometheusRules() PrometheusRuleInformer
+	// SLSPodMonitors returns a SLSPodMonitorInformer.
+	SLSPodMonitors() SLSPodMonitorInformer
+	// SLSServiceMonitors returns a SLSServiceMonitorInformer.
+	SLSServiceMonitors() SLSServiceMonitorInformer
 	// ServiceMonitors returns a ServiceMonitorInformer.
 	ServiceMonitors() ServiceMonitorInformer
 	// ThanosRulers returns a ThanosRulerInformer.
@@ -72,6 +76,16 @@ func (v *version) Prometheuses() PrometheusInformer {
 // PrometheusRules returns a PrometheusRuleInformer.
 func (v *version) PrometheusRules() PrometheusRuleInformer {
 	return &prometheusRuleInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+}
+
+// SLSPodMonitors returns a SLSPodMonitorInformer.
+func (v *version) SLSPodMonitors() SLSPodMonitorInformer {
+	return &sLSPodMonitorInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+}
+
+// SLSServiceMonitors returns a SLSServiceMonitorInformer.
+func (v *version) SLSServiceMonitors() SLSServiceMonitorInformer {
+	return &sLSServiceMonitorInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
 // ServiceMonitors returns a ServiceMonitorInformer.

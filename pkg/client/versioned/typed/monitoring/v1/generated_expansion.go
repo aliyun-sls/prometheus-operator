@@ -26,6 +26,10 @@ type PrometheusExpansion interface{}
 
 type PrometheusRuleExpansion interface{}
 
+type SLSPodMonitorExpansion interface{}
+
+type SLSServiceMonitorExpansion interface{}
+
 type ServiceMonitorExpansion interface{}
 
 type ThanosRulerExpansion interface{}

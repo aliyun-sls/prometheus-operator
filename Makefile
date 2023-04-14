@@ -235,7 +235,7 @@ generate-remote-write-certs:
 .PHONY: generate-docs
 generate-docs: $(shell find Documentation -type f)
 
-bundle.yaml: generate-crds $(shell find example/rbac/prometheus-operator/*.yaml -type f)
+bundle.yaml:  $(shell find example/rbac/prometheus-operator/*.yaml -type f)
 	scripts/generate-bundle.sh
 
 # stripped-down-crds.yaml is a version of the Prometheus Operator CRDs with all

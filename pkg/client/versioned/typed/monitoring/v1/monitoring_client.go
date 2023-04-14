@@ -31,6 +31,8 @@ type MonitoringV1Interface interface {
 	ProbesGetter
 	PrometheusesGetter
 	PrometheusRulesGetter
+	SLSPodMonitorsGetter
+	SLSServiceMonitorsGetter
 	ServiceMonitorsGetter
 	ThanosRulersGetter
 }
@@ -58,6 +60,14 @@ func (c *MonitoringV1Client) Prometheuses(namespace string) PrometheusInterface 
 
 func (c *MonitoringV1Client) PrometheusRules(namespace string) PrometheusRuleInterface {
 	return newPrometheusRules(c, namespace)
+}
+
+func (c *MonitoringV1Client) SLSPodMonitors(namespace string) SLSPodMonitorInterface {
+	return newSLSPodMonitors(c, namespace)
+}
+
+func (c *MonitoringV1Client) SLSServiceMonitors(namespace string) SLSServiceMonitorInterface {
+	return newSLSServiceMonitors(c, namespace)
 }
 
 func (c *MonitoringV1Client) ServiceMonitors(namespace string) ServiceMonitorInterface {

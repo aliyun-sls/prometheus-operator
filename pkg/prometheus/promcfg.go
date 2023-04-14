@@ -59,6 +59,15 @@ type ConfigGenerator struct {
 	endpointSliceSupported bool
 }
 
+func NewSLSConfigGenerator(logger log.Logger) (*ConfigGenerator, error) {
+	if logger == nil {
+		logger = log.NewNopLogger()
+	}
+	return &ConfigGenerator{
+		logger: logger,
+	}, nil
+}
+
 // NewConfigGenerator creates a ConfigGenerator for the provided Prometheus resource.
 func NewConfigGenerator(logger log.Logger, p v1.PrometheusInterface, endpointSliceSupported bool) (*ConfigGenerator, error) {
 	if logger == nil {
@@ -608,6 +617,27 @@ func initRelabelings() []yaml.MapSlice {
 		},
 	}
 }
+func (cg *ConfigGenerator) GenerateSLSPodMonitorConfig(
+	m *v1.SLSPodMonitor,
+	ep v1.PodMetricsEndpoint,
+	i int,
+	apiserverConfig *v1.APIServerConfig,
+	store *assets.Store,
+	shards int32,
+) yaml.MapSlice {
+	return cg.generatePodMonitorConfig(m.Convert2PodMonitor(), ep, i, apiserverConfig, store, shards)
+}
+
+func (cg *ConfigGenerator) GenerateSLSServiceMonitorConfig(
+	m *v1.SLSServiceMonitor,
+	ep v1.Endpoint,
+	i int,
+	apiserverConfig *v1.APIServerConfig,
+	store *assets.Store,
+	shards int32,
+) yaml.MapSlice {
+	return cg.generateServiceMonitorConfig(m.Convert2ServiceMonitor(), ep, i, apiserverConfig, store, shards)
+}
 
 func (cg *ConfigGenerator) generatePodMonitorConfig(
 	m *v1.PodMonitor,
@@ -622,8 +652,8 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 			Value: fmt.Sprintf("podMonitor/%s/%s/%d", m.Namespace, m.Name, i),
 		},
 	}
-	cfg = cg.AddHonorLabels(cfg, ep.HonorLabels)
-	cfg = cg.AddHonorTimestamps(cfg, ep.HonorTimestamps)
+	//cfg = cg.AddHonorLabels(cfg, ep.HonorLabels)
+	//cfg = cg.AddHonorTimestamps(cfg, ep.HonorTimestamps)
 
 	var attachMetaConfig *attachMetadataConfig
 	if m.Spec.AttachMetadata != nil {
@@ -814,7 +844,7 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	labeler := namespacelabeler.New(cpf.EnforcedNamespaceLabel, cpf.ExcludedFromEnforcement, false)
 	relabelings = append(relabelings, generateRelabelConfig(labeler.GetRelabelingConfigs(m.TypeMeta, m.ObjectMeta, ep.RelabelConfigs))...)
 
-	relabelings = generateAddressShardingRelabelingRules(relabelings, shards)
+	//relabelings = generateAddressShardingRelabelingRules(relabelings, shards)
 	cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
 
 	cfg = cg.AddLimitsToYAML(cfg, sampleLimitKey, m.Spec.SampleLimit, cpf.EnforcedSampleLimit)
@@ -1030,7 +1060,7 @@ func (cg *ConfigGenerator) generateProbeConfig(
 
 		// Add configured relabelings.
 		relabelings = append(relabelings, generateRelabelConfig(labeler.GetRelabelingConfigs(m.TypeMeta, m.ObjectMeta, m.Spec.Targets.Ingress.RelabelConfigs))...)
-		relabelings = generateAddressShardingRelabelingRulesForProbes(relabelings, shards)
+		//relabelings = generateAddressShardingRelabelingRulesForProbes(relabelings, shards)
 
 		cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
 
@@ -1073,8 +1103,8 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 			Value: fmt.Sprintf("serviceMonitor/%s/%s/%d", m.Namespace, m.Name, i),
 		},
 	}
-	cfg = cg.AddHonorLabels(cfg, ep.HonorLabels)
-	cfg = cg.AddHonorTimestamps(cfg, ep.HonorTimestamps)
+	//cfg = cg.AddHonorLabels(cfg, ep.HonorLabels)
+	//cfg = cg.AddHonorTimestamps(cfg, ep.HonorTimestamps)
 
 	role := kubernetesSDRoleEndpoint
 	if cg.EndpointSliceSupported() {
@@ -1115,8 +1145,8 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	if ep.EnableHttp2 != nil {
 		cfg = cg.WithMinimumVersion("2.35.0").AppendMapItem(cfg, "enable_http2", *ep.EnableHttp2)
 	}
-	assetKey := fmt.Sprintf("serviceMonitor/%s/%s/%d", m.Namespace, m.Name, i)
-	cfg = cg.addOAuth2ToYaml(cfg, ep.OAuth2, store.OAuth2Assets, assetKey)
+	//assetKey := fmt.Sprintf("serviceMonitor/%s/%s/%d", m.Namespace, m.Name, i)
+	//cfg = cg.addOAuth2ToYaml(cfg, ep.OAuth2, store.OAuth2Assets, assetKey)
 
 	cfg = addTLStoYaml(cfg, m.Namespace, ep.TLSConfig)
 
@@ -1263,15 +1293,15 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 		})
 	}
 
-	cpf := cg.prom.GetCommonPrometheusFields()
-	for _, l := range append(m.Spec.PodTargetLabels, cpf.PodTargetLabels...) {
-		relabelings = append(relabelings, yaml.MapSlice{
-			{Key: "source_labels", Value: []string{"__meta_kubernetes_pod_label_" + sanitizeLabelName(l)}},
-			{Key: "target_label", Value: sanitizeLabelName(l)},
-			{Key: "regex", Value: "(.+)"},
-			{Key: "replacement", Value: "${1}"},
-		})
-	}
+	//cpf := cg.prom.GetCommonPrometheusFields()
+	//for _, l := range append(m.Spec.PodTargetLabels, cpf.PodTargetLabels...) {
+	//	relabelings = append(relabelings, yaml.MapSlice{
+	//		{Key: "source_labels", Value: []string{"__meta_kubernetes_pod_label_" + sanitizeLabelName(l)}},
+	//		{Key: "target_label", Value: sanitizeLabelName(l)},
+	//		{Key: "regex", Value: "(.+)"},
+	//		{Key: "replacement", Value: "${1}"},
+	//	})
+	//}
 
 	// By default, generate a safe job name from the service name.  We also keep
 	// this around if a jobLabel is set in case the targets don't actually have a
@@ -1305,23 +1335,23 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 		})
 	}
 
-	labeler := namespacelabeler.New(cpf.EnforcedNamespaceLabel, cpf.ExcludedFromEnforcement, false)
-	relabelings = append(relabelings, generateRelabelConfig(labeler.GetRelabelingConfigs(m.TypeMeta, m.ObjectMeta, ep.RelabelConfigs))...)
+	//labeler := namespacelabeler.New(cpf.EnforcedNamespaceLabel, cpf.ExcludedFromEnforcement, false)
+	//relabelings = append(relabelings, generateRelabelConfig(labeler.GetRelabelingConfigs(m.TypeMeta, m.ObjectMeta, ep.RelabelConfigs))...)
 
-	relabelings = generateAddressShardingRelabelingRules(relabelings, shards)
+	//relabelings = generateAddressShardingRelabelingRules(relabelings, shards)
 	cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
 
-	cfg = cg.AddLimitsToYAML(cfg, sampleLimitKey, m.Spec.SampleLimit, cpf.EnforcedSampleLimit)
-	cfg = cg.AddLimitsToYAML(cfg, targetLimitKey, m.Spec.TargetLimit, cpf.EnforcedTargetLimit)
-	cfg = cg.AddLimitsToYAML(cfg, labelLimitKey, m.Spec.LabelLimit, cpf.EnforcedLabelLimit)
-	cfg = cg.AddLimitsToYAML(cfg, labelNameLengthLimitKey, m.Spec.LabelNameLengthLimit, cpf.EnforcedLabelNameLengthLimit)
-	cfg = cg.AddLimitsToYAML(cfg, labelValueLengthLimitKey, m.Spec.LabelValueLengthLimit, cpf.EnforcedLabelValueLengthLimit)
+	//cfg = cg.AddLimitsToYAML(cfg, sampleLimitKey, m.Spec.SampleLimit, cpf.EnforcedSampleLimit)
+	//cfg = cg.AddLimitsToYAML(cfg, targetLimitKey, m.Spec.TargetLimit, cpf.EnforcedTargetLimit)
+	//cfg = cg.AddLimitsToYAML(cfg, labelLimitKey, m.Spec.LabelLimit, cpf.EnforcedLabelLimit)
+	//cfg = cg.AddLimitsToYAML(cfg, labelNameLengthLimitKey, m.Spec.LabelNameLengthLimit, cpf.EnforcedLabelNameLengthLimit)
+	//cfg = cg.AddLimitsToYAML(cfg, labelValueLengthLimitKey, m.Spec.LabelValueLengthLimit, cpf.EnforcedLabelValueLengthLimit)
 
-	if cpf.EnforcedBodySizeLimit != "" {
-		cfg = cg.WithMinimumVersion("2.28.0").AppendMapItem(cfg, "body_size_limit", cpf.EnforcedBodySizeLimit)
-	}
+	//if cpf.EnforcedBodySizeLimit != "" {
+	//	cfg = cg.WithMinimumVersion("2.28.0").AppendMapItem(cfg, "body_size_limit", cpf.EnforcedBodySizeLimit)
+	//}
 
-	cfg = append(cfg, yaml.MapItem{Key: "metric_relabel_configs", Value: generateRelabelConfig(labeler.GetRelabelingConfigs(m.TypeMeta, m.ObjectMeta, ep.MetricRelabelConfigs))})
+	//cfg = append(cfg, yaml.MapItem{Key: "metric_relabel_configs", Value: generateRelabelConfig(labeler.GetRelabelingConfigs(m.TypeMeta, m.ObjectMeta, ep.MetricRelabelConfigs))})
 
 	return cfg
 }
@@ -1407,9 +1437,7 @@ func generateRelabelConfig(rc []*v1.RelabelConfig) []yaml.MapSlice {
 // GetNamespacesFromNamespaceSelector gets a list of namespaces to select based on
 // the given namespace selector, the given default namespace, and whether to ignore namespace selectors
 func (cg *ConfigGenerator) getNamespacesFromNamespaceSelector(nsel v1.NamespaceSelector, namespace string) []string {
-	if cg.prom.GetCommonPrometheusFields().IgnoreNamespaceSelectors {
-		return []string{namespace}
-	} else if nsel.Any {
+	if nsel.Any {
 		return []string{}
 	} else if len(nsel.MatchNames) == 0 {
 		return []string{namespace}
@@ -1596,7 +1624,7 @@ func (cg *ConfigGenerator) generateAdditionalScrapeConfigs(
 				relabelings = append(relabelings, relabeling)
 			}
 		}
-		relabelings = generateAddressShardingRelabelingRules(relabelings, shards)
+		//relabelings = generateAddressShardingRelabelingRules(relabelings, shards)
 		addlScrapeConfig = append(addlScrapeConfig, otherConfigItems...)
 		addlScrapeConfig = append(addlScrapeConfig, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
 		addlScrapeConfigs = append(addlScrapeConfigs, addlScrapeConfig)
